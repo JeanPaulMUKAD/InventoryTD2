@@ -1,27 +1,26 @@
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
-import com.example.inventory.data.Item
-import kotlinx.coroutines.flow.Flow
+package com.example.inventory.data
+
 import ItemDao
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
-@Dao
-interface ItemDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(item: Item)
+@Database(entities = [Item::class], version = 1, exportSchema = false)
+abstract class InventoryDatabase : RoomDatabase() {
 
-    @Update
-    suspend fun update(item: Item)
+    abstract fun itemDao(): ItemDao
 
-    @Delete
-    suspend fun delete(item: Item)
+    companion object {
+        @Volatile
+        private var Instance: InventoryDatabase? = null
 
-    @Query("SELECT * from items WHERE id = :id")
-    fun getItem(id: Int): Flow<Item>
-
-    @Query("SELECT * from items ORDER BY name ASC")
-    fun getAllItems(): Flow<List<Item>>
+        fun getDatabase(context: Context): InventoryDatabase {
+            // if the Instance is not null, return it, otherwise create a new database instance.
+            return Instance ?: synchronized(this) {
+                Room.databaseBuilder(context, InventoryDatabase::class.java, "item_database")
+                    .build().also { Instance = it }
+            }
+        }
+    }
 }
