@@ -1,4 +1,4 @@
-package com.example.inventory.ui.theme
+package com.example.inventory.ui.theme.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

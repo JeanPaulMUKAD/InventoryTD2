@@ -1,42 +1,27 @@
-/*
- * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.example.inventory.data.Item
+import kotlinx.coroutines.flow.Flow
+import ItemDao
 
-package com.example.inventory.data
+@Dao
+interface ItemDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(item: Item)
 
-import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
+    @Update
+    suspend fun update(item: Item)
 
-@Database(entities = [Item::class], version = 1, exportSchema = false)
-abstract class InventoryDatabase : RoomDatabase() {
+    @Delete
+    suspend fun delete(item: Item)
 
-    abstract fun itemDao(): ItemDao
+    @Query("SELECT * from items WHERE id = :id")
+    fun getItem(id: Int): Flow<Item>
 
-    companion object {
-        @Volatile
-        private var Instance: InventoryDatabase? = null
-
-        fun getDatabase(context: Context): InventoryDatabase {
-            // if the Instance is not null, return it, otherwise create a new database instance.
-            return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, InventoryDatabase::class.java, "item_database")
-                    .build().also { Instance = it }
-            }
-        }
-    }
+    @Query("SELECT * from items ORDER BY name ASC")
+    fun getAllItems(): Flow<List<Item>>
 }
-
